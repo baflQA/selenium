@@ -1,0 +1,52 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
+genrule(
+    name = "get-attribute",
+    srcs = ["//javascript/webdriver/atoms:get-attribute.js"],
+    outs = ["selenium/webdriver/remote/getAttribute.js"],
+    cmd = "cp $< $@",
+)
+
+genrule(
+    name = "is-displayed",
+    srcs = ["//javascript/atoms/fragments:is-displayed.js"],
+    outs = ["selenium/webdriver/remote/isDisplayed.js"],
+    cmd = "cp $< $@",
+)
+
+py_library(
+    name = "main",
+    srcs = glob(["selenium/**/*.py"]),
+    data = [
+        ":get-attribute",
+        ":is-displayed",
+    ],
+    deps = [
+        "//third_party/py:urllib3",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    name = "unit",
+    size = "small",
+    srcs = glob([
+        "test/unit/**/*.py",
+    ]) + [ "test/runner/run_pytest.py" ],
+    main = "test/runner/run_pytest.py",
+    deps = [
+        ":main",
+        "//third_party/py:pytest",
+    ],
+    legacy_create_init = False,
+)
+
+py_binary(
+  name = "untar",
+  visibility = ["//visibility:public"],
+  srcs = [
+      "untar.py",
+  ],
+  legacy_create_init = False,
+)

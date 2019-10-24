@@ -17,15 +17,10 @@
 
 package org.openqa.selenium.remote;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
-
-import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 import org.openqa.selenium.By;
@@ -38,8 +33,10 @@ import org.openqa.selenium.ScreenOrientation;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +49,7 @@ public abstract class BaseAugmenterTest {
 
     WebDriver returned = getAugmenter().augment(driver);
 
-    assertSame(driver, returned);
+    assertThat(returned).isSameAs(driver);
   }
 
   @Test
@@ -64,8 +61,8 @@ public abstract class BaseAugmenterTest {
     augmenter.addDriverAugmentation("magic.numbers", new AddsMagicNumberHolder());
     WebDriver returned = augmenter.augment(driver);
 
-    assertNotSame(driver, returned);
-    assertTrue(returned instanceof TakesScreenshot);
+    assertThat(returned).isNotSameAs(driver);
+    assertThat(returned).isInstanceOf(TakesScreenshot.class);
   }
 
   @Test
@@ -77,8 +74,8 @@ public abstract class BaseAugmenterTest {
     augmenter.addDriverAugmentation("magic.numbers", new AddsMagicNumberHolder());
     WebDriver returned = augmenter.augment(driver);
 
-    assertSame(driver, returned);
-    assertFalse(returned instanceof MagicNumberHolder);
+    assertThat(returned).isSameAs(driver);
+    assertThat(returned).isNotInstanceOf(MagicNumberHolder.class);
   }
 
   @Test
@@ -87,10 +84,12 @@ public abstract class BaseAugmenterTest {
 
     BaseAugmenter augmenter = getAugmenter();
     augmenter.addDriverAugmentation("foo", new AugmenterProvider() {
+      @Override
       public Class<?> getDescribedInterface() {
         return MyInterface.class;
       }
 
+      @Override
       public InterfaceImplementation getImplementation(Object value) {
         return (executeMethod, self, method, args) -> "Hello World";
       }
@@ -100,7 +99,7 @@ public abstract class BaseAugmenterTest {
     WebDriver returned = augmenter.augment(driver);
 
     String text = ((MyInterface) returned).getHelloWorld();
-    assertEquals("Hello World", text);
+    assertThat(text).isEqualTo("Hello World");
   }
 
   @Test
@@ -114,10 +113,10 @@ public abstract class BaseAugmenterTest {
     augmenter.addDriverAugmentation("magic.numbers", new AddsMagicNumberHolder());
     WebDriver returned = augmenter.augment(driver);
 
-    assertEquals("Title", returned.getTitle());
+    assertThat(returned.getTitle()).isEqualTo("Title");
   }
 
-  @Test(expected = NoSuchElementException.class)
+  @Test
   public void proxyShouldNotAppearInStackTraces() {
     // This will force the class to be enhanced
     final Capabilities caps = new ImmutableCapabilities("magic.numbers", true);
@@ -129,7 +128,8 @@ public abstract class BaseAugmenterTest {
     augmenter.addDriverAugmentation("magic.numbers", new AddsMagicNumberHolder());
     WebDriver returned = augmenter.augment(driver);
 
-    returned.findElement(By.id("ignored"));
+    assertThatExceptionOfType(NoSuchElementException.class)
+        .isThrownBy(() -> returned.findElement(By.id("ignored")));
   }
 
 
@@ -140,7 +140,7 @@ public abstract class BaseAugmenterTest {
 
     WebElement returned = getAugmenter().augment(element);
 
-    assertSame(element, returned);
+    assertThat(returned).isSameAs(element);
   }
 
   @Test
@@ -150,10 +150,12 @@ public abstract class BaseAugmenterTest {
 
     BaseAugmenter augmenter = getAugmenter();
     augmenter.addElementAugmentation("foo", new AugmenterProvider() {
+      @Override
       public Class<?> getDescribedInterface() {
         return MyInterface.class;
       }
 
+      @Override
       public InterfaceImplementation getImplementation(Object value) {
         return (executeMethod, self, method, args) -> "Hello World";
       }
@@ -172,10 +174,9 @@ public abstract class BaseAugmenterTest {
 
     WebElement returned = augmenter.augment(element);
 
-    assertTrue(returned instanceof MyInterface);
+    assertThat(returned).isInstanceOf(MyInterface.class);
 
-    executor.expect(DriverCommand.CLICK_ELEMENT, ImmutableMap.of("id", "1234"),
-        null);
+    executor.expect(DriverCommand.CLICK_ELEMENT, singletonMap("id", "1234"), null);
     returned.click();
   }
 
@@ -185,17 +186,13 @@ public abstract class BaseAugmenterTest {
     driver.setMagicNumber(3);
     MagicNumberHolder holder = (MagicNumberHolder) getAugmenter().augment(driver);
 
-    assertEquals(3, holder.getMagicNumber());
+    assertThat(holder.getMagicNumber()).isEqualTo(3);
   }
 
   @Test
   public void shouldNotChokeOnFinalFields() {
     WithFinals withFinals = new WithFinals();
-    try {
-      getAugmenter().augment(withFinals);
-    } catch (Exception e) {
-      fail("This is not expected: " + e.getMessage());
-    }
+    getAugmenter().augment(withFinals);
   }
 
 
@@ -205,30 +202,30 @@ public abstract class BaseAugmenterTest {
 
     StubExecutor stubExecutor = new StubExecutor(caps);
     stubExecutor.expect(DriverCommand.GET_SCREEN_ORIENTATION,
-        ImmutableMap.<String, Object>of(),
-        ScreenOrientation.PORTRAIT.name());
+                        Collections.emptyMap(),
+                        ScreenOrientation.PORTRAIT.name());
     RemoteWebDriver driver = new RemoteWebDriver(stubExecutor, caps);
 
     BaseAugmenter augmenter = getAugmenter();
     augmenter.addDriverAugmentation("canRotate", new AddRotatable());
 
     WebDriver augmented = augmenter.augment(driver);
-    assertNotSame(augmented, driver);
-    assertTrue(augmented instanceof Rotatable);
-    assertFalse(augmented instanceof MagicNumberHolder);
+    assertThat(driver).isNotSameAs(augmented);
+    assertThat(augmented).isInstanceOf(Rotatable.class);
+    assertThat(augmented).isNotInstanceOf(MagicNumberHolder.class);
 
     augmenter = getAugmenter();
     augmenter.addDriverAugmentation("magic.numbers", new AddsMagicNumberHolder());
 
     WebDriver augmentedAgain = augmenter.augment(augmented);
-    assertNotSame(augmentedAgain, augmented);
-    assertTrue(augmentedAgain instanceof Rotatable);
-    assertTrue(augmentedAgain instanceof MagicNumberHolder);
+    assertThat(augmented).isNotSameAs(augmentedAgain);
+    assertThat(augmentedAgain).isInstanceOf(Rotatable.class);
+    assertThat(augmentedAgain).isInstanceOf(MagicNumberHolder.class);
 
     ((Rotatable) augmentedAgain).getOrientation();  // Should not throw.
 
-    assertSame(driver.getCapabilities(),
-        ((HasCapabilities) augmentedAgain).getCapabilities());
+    assertThat(((HasCapabilities) augmentedAgain).getCapabilities())
+        .isSameAs(driver.getCapabilities());
   }
 
   protected static class StubExecutor implements CommandExecutor {
@@ -239,6 +236,7 @@ public abstract class BaseAugmenterTest {
       this.capabilities = capabilities;
     }
 
+    @Override
     public Response execute(Command command) {
       if (DriverCommand.NEW_SESSION.equals(command.getName())) {
         Response response = new Response(new SessionId("foo"));
@@ -255,8 +253,7 @@ public abstract class BaseAugmenterTest {
         }
       }
 
-      fail("Unexpected method invocation: " + command);
-      return null; // never reached
+      throw new AssertionError("Unexpected method invocation: " + command);
     }
 
     public void expect(String commandName, Map<String, ?> args, Object returnValue) {
@@ -299,8 +296,8 @@ public abstract class BaseAugmenterTest {
   }
 
   public interface MagicNumberHolder {
-    public int getMagicNumber();
-    public void setMagicNumber(int number);
+    int getMagicNumber();
+    void setMagicNumber(int number);
   }
 
   public static class ChildRemoteDriver extends RemoteWebDriver implements MagicNumberHolder {
@@ -308,7 +305,7 @@ public abstract class BaseAugmenterTest {
 
     @Override
     public Capabilities getCapabilities() {
-      return DesiredCapabilities.firefox();
+      return new FirefoxOptions();
     }
 
     @Override

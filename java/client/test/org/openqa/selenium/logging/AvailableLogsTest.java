@@ -17,16 +17,16 @@
 
 package org.openqa.selenium.logging;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeTrue;
 import static org.openqa.selenium.remote.CapabilityType.ENABLE_PROFILING_CAPABILITY;
-import static org.openqa.selenium.testing.Driver.HTMLUNIT;
-import static org.openqa.selenium.testing.Driver.IE;
-import static org.openqa.selenium.testing.Driver.MARIONETTE;
-import static org.openqa.selenium.testing.Driver.SAFARI;
-import static org.openqa.selenium.testing.TestUtilities.isOldChromedriver;
+import static org.openqa.selenium.testing.TestUtilities.getChromeVersion;
+import static org.openqa.selenium.testing.TestUtilities.isChrome;
+import static org.openqa.selenium.testing.drivers.Browser.EDGE;
+import static org.openqa.selenium.testing.drivers.Browser.HTMLUNIT;
+import static org.openqa.selenium.testing.drivers.Browser.IE;
+import static org.openqa.selenium.testing.drivers.Browser.MARIONETTE;
+import static org.openqa.selenium.testing.drivers.Browser.SAFARI;
 
 import org.junit.After;
 import org.junit.Test;
@@ -41,6 +41,7 @@ import java.util.Set;
 
 @Ignore(HTMLUNIT)
 @Ignore(IE)
+@Ignore(EDGE)
 @Ignore(MARIONETTE)
 @Ignore(SAFARI)
 public class AvailableLogsTest extends JUnit4TestBase {
@@ -57,20 +58,20 @@ public class AvailableLogsTest extends JUnit4TestBase {
 
   @Test
   public void browserLogShouldBeEnabledByDefault() {
-    assumeFalse(isOldChromedriver(driver));
+    assumeTrue(!isChrome(driver) || getChromeVersion(driver) > 20);
     Set<String> logTypes = driver.manage().logs().getAvailableLogTypes();
-    assertTrue("Browser logs should be enabled by default",
-               logTypes.contains(LogType.BROWSER));
+    assertThat(logTypes.contains(LogType.BROWSER))
+        .describedAs("Browser logs should be enabled by default").isTrue();
   }
 
   @Test
   public void clientLogShouldBeEnabledByDefault() {
-    assumeFalse(isOldChromedriver(driver));
+    assumeTrue(!isChrome(driver) || getChromeVersion(driver) > 20);
     // Do one action to have *something* in the client logs.
     driver.get(pages.formPage);
     Set<String> logTypes = driver.manage().logs().getAvailableLogTypes();
-    assertTrue("Client logs should be enabled by default",
-               logTypes.contains(LogType.CLIENT));
+    assertThat(logTypes.contains(LogType.CLIENT))
+        .describedAs("Client logs should be enabled by default").isTrue();
     boolean foundExecutingStatement = false;
     boolean foundExecutedStatement = false;
     for (LogEntry logEntry : driver.manage().logs().get(LogType.CLIENT)) {
@@ -78,34 +79,35 @@ public class AvailableLogsTest extends JUnit4TestBase {
       foundExecutedStatement |= logEntry.toString().contains("Executed: ");
     }
 
-    assertTrue(foundExecutingStatement);
-    assertTrue(foundExecutedStatement);
+    assertThat(foundExecutingStatement).isTrue();
+    assertThat(foundExecutedStatement).isTrue();
   }
 
   @Test
   public void driverLogShouldBeEnabledByDefault() {
-    assumeFalse(isOldChromedriver(driver));
+    assumeTrue(!isChrome(driver) || getChromeVersion(driver) > 20);
     Set<String> logTypes = driver.manage().logs().getAvailableLogTypes();
-    assertTrue("Remote driver logs should be enabled by default",
-               logTypes.contains(LogType.DRIVER));
+    assertThat(logTypes.contains(LogType.DRIVER))
+        .describedAs("Remote driver logs should be enabled by default").isTrue();
   }
 
   @Test
   public void profilerLogShouldBeDisabledByDefault() {
-    assumeFalse(isOldChromedriver(driver));
+    assumeTrue(!isChrome(driver) || getChromeVersion(driver) > 20);
     Set<String> logTypes = driver.manage().logs().getAvailableLogTypes();
-    assertFalse("Profiler logs should not be enabled by default",
-                logTypes.contains(LogType.PROFILER));
+    assertThat(logTypes.contains(LogType.PROFILER))
+        .describedAs("Profiler logs should not be enabled by default").isFalse();
   }
 
   @Test
   @Ignore(value = SAFARI, reason = "Safari does not support profiler logs")
   public void shouldBeAbleToEnableProfilerLog() {
-    assumeFalse(isOldChromedriver(driver));
+    assumeTrue(!isChrome(driver) || getChromeVersion(driver) > 20);
     Capabilities caps = new ImmutableCapabilities(ENABLE_PROFILING_CAPABILITY, true);
     localDriver = new WebDriverBuilder().get(caps);
     Set<String> logTypes = localDriver.manage().logs().getAvailableLogTypes();
-    assertTrue("Profiler log should be enabled", logTypes.contains(LogType.PROFILER));
+    assertThat(logTypes.contains(LogType.PROFILER))
+        .describedAs("Profiler log should be enabled").isTrue();
   }
 
   @Test
@@ -113,8 +115,8 @@ public class AvailableLogsTest extends JUnit4TestBase {
     assumeTrue(Boolean.getBoolean("selenium.browser.remote"));
 
     Set<String> logTypes = driver.manage().logs().getAvailableLogTypes();
-    assertTrue("Server logs should be enabled by default",
-               logTypes.contains(LogType.SERVER));
+    assertThat(logTypes.contains(LogType.SERVER))
+        .describedAs("Server logs should be enabled by default").isTrue();
   }
 
 }

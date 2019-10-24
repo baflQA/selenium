@@ -17,14 +17,13 @@
 
 package org.openqa.selenium;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.openqa.selenium.testing.drivers.Browser.EDGE;
 
 import org.junit.Test;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.testing.JUnit4TestBase;
+import org.openqa.selenium.testing.NotYetImplemented;
 
 public class ElementSelectingTest extends JUnit4TestBase {
   private static final boolean UNSELECTED = false;
@@ -98,14 +97,15 @@ public class ElementSelectingTest extends JUnit4TestBase {
     driver.get(pages.formPage);
 
     WebElement button = enabledSelectedRadioButton();
-    assertTrue(button.isSelected());
+    assertThat(button.isSelected()).isTrue();
 
     button.click();
 
-    assertTrue(button.isSelected());
+    assertThat(button.isSelected()).isTrue();
   }
 
   @Test
+  @NotYetImplemented(EDGE)
   public void testShouldBeAbleToToggleEnabledMultiSelectOption() {
     driver.get(pages.formPage);
     assertCanToggle(selectedMultipleSelectOption());
@@ -174,16 +174,16 @@ public class ElementSelectingTest extends JUnit4TestBase {
 
   private void assertSelected(WebElement element, boolean isSelected) {
     wait.until(ExpectedConditions.elementSelectionStateToBe(element, isSelected));
-    assertThat(
-        String.format("Expected element %s to be %s but was %s",
-            describe(element), selectedToString(isSelected), selectedToString(!isSelected)),
-        element.isSelected(), is(isSelected));
+    assertThat(element.isSelected())
+        .describedAs("Expected element %s to be %s",
+                     describe(element), selectedToString(isSelected), selectedToString(!isSelected))
+        .isEqualTo(isSelected);
   }
 
   private void assertCannotSelect(WebElement element) {
     boolean previous = element.isSelected();
     element.click();
-    assertEquals(previous, element.isSelected());
+    assertThat(element.isSelected()).isEqualTo(previous);
   }
 
   private void assertCanSelect(WebElement element) {
@@ -219,12 +219,10 @@ public class ElementSelectingTest extends JUnit4TestBase {
   private void assertTogglingSwapsSelectedStateFrom(WebElement element, boolean originalState) {
     element.click();
     boolean isNowSelected = element.isSelected();
-    assertThat(
-        String.format("Expected element %s to have been toggled to %s but was %s",
-            describe(element),
-            selectedToString(!originalState),
-            selectedToString(originalState)),
-        isNowSelected, is(!(originalState)));
+    assertThat(isNowSelected)
+        .describedAs("Expected element %s to have been toggled to %s",
+                     describe(element), selectedToString(!originalState))
+        .isEqualTo(!(originalState));
     assertSelected(element, !originalState);
   }
 

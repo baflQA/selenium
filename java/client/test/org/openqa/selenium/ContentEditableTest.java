@@ -17,22 +17,17 @@
 
 package org.openqa.selenium;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeFalse;
-import static org.openqa.selenium.testing.Driver.CHROME;
-import static org.openqa.selenium.testing.Driver.EDGE;
-import static org.openqa.selenium.testing.Driver.IE;
-import static org.openqa.selenium.testing.Driver.MARIONETTE;
-import static org.openqa.selenium.testing.Driver.SAFARI;
+import static org.openqa.selenium.testing.drivers.Browser.EDGE;
+import static org.openqa.selenium.testing.drivers.Browser.IE;
+import static org.openqa.selenium.testing.drivers.Browser.MARIONETTE;
+import static org.openqa.selenium.testing.drivers.Browser.SAFARI;
 import static org.openqa.selenium.testing.TestUtilities.getEffectivePlatform;
 import static org.openqa.selenium.testing.TestUtilities.isFirefox;
 
 import org.junit.After;
 import org.junit.Test;
-import org.openqa.selenium.testing.Ignore;
 import org.openqa.selenium.testing.JUnit4TestBase;
 import org.openqa.selenium.testing.NotYetImplemented;
 
@@ -56,12 +51,8 @@ public class ContentEditableTest extends JUnit4TestBase {
     WebElement trusted = driver.findElement(By.id("istrusted"));
     WebElement id = driver.findElement(By.id("tagId"));
 
-    assertThat(trusted.getText(), anyOf(
-        equalTo("[true]"),
-        // Chrome does not set a trusted flag.
-        equalTo("[n/a]"),
-        equalTo("[]")));
-    assertThat(id.getText(), anyOf(equalTo("[frameHtml]"), equalTo("[theBody]")));
+    assertThat(trusted.getText()).isIn("[true]", "[n/a]", "[]");
+    assertThat(id.getText()).isIn("[frameHtml]", "[theBody]");
   }
 
   @Test
@@ -79,7 +70,7 @@ public class ContentEditableTest extends JUnit4TestBase {
     element.sendKeys("Dishy", Keys.BACK_SPACE, Keys.LEFT, Keys.LEFT);
     element.sendKeys(Keys.LEFT, Keys.LEFT, "F", Keys.DELETE, Keys.END, "ee!");
 
-    assertEquals("Fishee!", element.getText());
+    assertThat(element.getText()).isEqualTo("Fishee!");
   }
 
   @Test
@@ -89,13 +80,12 @@ public class ContentEditableTest extends JUnit4TestBase {
 
     editable.sendKeys("cheese");
 
-    assertThat(editable.getText(), equalTo("cheese"));
+    assertThat(editable.getText()).isEqualTo("cheese");
   }
 
   @Test
-  @Ignore(CHROME)
-  @Ignore(IE)
   @NotYetImplemented(SAFARI)
+  @NotYetImplemented(EDGE)
   @NotYetImplemented(value = MARIONETTE, reason = "https://github.com/mozilla/geckodriver/issues/667")
   public void testShouldBeAbleToTypeIntoContentEditableElementWithExistingValue() {
     driver.get(pages.readOnlyPage);
@@ -104,11 +94,10 @@ public class ContentEditableTest extends JUnit4TestBase {
     String initialText = editable.getText();
     editable.sendKeys(", edited");
 
-    assertThat(editable.getText(), equalTo(initialText + ", edited"));
+    assertThat(editable.getText()).isEqualTo(initialText + ", edited");
   }
 
   @Test
-  @Ignore(IE)
   public void testShouldBeAbleToTypeIntoTinyMCE() {
     driver.get(appServer.whereIs("tinymce.html"));
     driver.switchTo().frame("mce_0_ifr");
@@ -118,14 +107,14 @@ public class ContentEditableTest extends JUnit4TestBase {
     editable.clear();
     editable.sendKeys("cheese"); // requires focus on OS X
 
-    assertThat(editable.getText(), equalTo("cheese"));
+    assertThat(editable.getText()).isEqualTo("cheese");
   }
 
   @Test
-  @Ignore(CHROME)
-  @Ignore(IE)
+  @NotYetImplemented(value = IE, reason = "Prepends text")
   @NotYetImplemented(value = SAFARI, reason = "Prepends text")
   @NotYetImplemented(value = MARIONETTE, reason = "https://github.com/mozilla/geckodriver/issues/667")
+  @NotYetImplemented(EDGE)
   public void testShouldAppendToTinyMCE() {
     driver.get(appServer.whereIs("tinymce.html"));
     driver.switchTo().frame("mce_0_ifr");
@@ -134,20 +123,16 @@ public class ContentEditableTest extends JUnit4TestBase {
 
     editable.sendKeys(" and cheese"); // requires focus on OS X
 
-    assertThat(editable.getText(), equalTo("Initial content and cheese"));
+    assertThat(editable.getText()).isEqualTo("Initial content and cheese");
   }
 
   @Test
-  @NotYetImplemented(value = CHROME, reason = "Prepends text")
-  @NotYetImplemented(value = EDGE)
   @NotYetImplemented(value = MARIONETTE, reason = "Doesn't write anything")
   @NotYetImplemented(value = SAFARI, reason = "Prepends text")
   public void appendsTextToEndOfContentEditableWithMultipleTextNodes() {
     driver.get(appServer.whereIs("content-editable.html"));
     WebElement input = driver.findElement(By.id("editable"));
     input.sendKeys(", world!");
-    System.out.println("input.getText() = " + input.getText());
-    assertEquals("Why hello, world!", input.getText());
+    assertThat(input.getText()).isEqualTo("Why hello, world!");
   }
-
 }

@@ -55,7 +55,7 @@ documentation that makes sense.
 Contributions toward the new docs follow the same process described in
 the next section about code contributions. You should spend some time
 familiarising yourself with the documentation by reading
-[more about it](https://seleniumhq.github.io/docs/intro.html#about_this_documentation).
+[more about it](https://seleniumhq.github.io/docs/site/en/introduction/about_this_documentation/).
 
 ## Code Contributions
 
@@ -188,12 +188,6 @@ Use `git rebase` (not `git merge`) to sync your work from time to time.
 
 Bug fixes and features **should have tests**. Look at other tests to
 see how they should be structured.
-
-Before you submit your pull request make sure you pass all the tests:
-
-```shell
-% ./go clean test
-```
 
 ### Step 6: Sign the CLA
 

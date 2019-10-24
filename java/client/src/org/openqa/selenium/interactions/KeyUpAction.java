@@ -18,7 +18,6 @@
 package org.openqa.selenium.interactions;
 
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.interactions.internal.Locatable;
 import org.openqa.selenium.interactions.internal.SingleKeyAction;
 
 import java.util.ArrayList;
@@ -40,6 +39,7 @@ public class KeyUpAction extends SingleKeyAction implements Action {
     super(keyboard, mouse, key);
   }
 
+  @Override
   public void perform() {
     focusOnElement();
 

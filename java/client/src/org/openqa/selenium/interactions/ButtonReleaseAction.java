@@ -18,7 +18,6 @@
 package org.openqa.selenium.interactions;
 
 import org.openqa.selenium.interactions.internal.MouseAction;
-import org.openqa.selenium.interactions.internal.Locatable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +41,7 @@ public class ButtonReleaseAction extends MouseAction implements Action {
    * out of sequence (without holding down the mouse button, for example) the results will be
    * different between browsers.
    */
+  @Override
   public void perform() {
     moveToLocation();
     mouse.mouseUp(getActionLocation());

@@ -1,0 +1,17 @@
+load("//java:defs.bzl", "java_test_suite")
+
+java_test_suite(
+    name = "SmallTests",
+    size = "small",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//java/client/src/org/openqa/selenium/json",
+        "//java/client/src/org/openqa/selenium/remote/http",
+        "//java/server/src/org/openqa/selenium/grid/web",
+        "//java/server/src/org/openqa/selenium/jetty/server",
+        "//java/server/test/org/openqa/testing",
+        "//third_party/java/assertj",
+        "//third_party/java/junit",
+        "//third_party/java/servlet:javax.servlet-api",
+    ],
+)

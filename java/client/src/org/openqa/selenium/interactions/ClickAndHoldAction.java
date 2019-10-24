@@ -18,7 +18,6 @@
 package org.openqa.selenium.interactions;
 
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.internal.Locatable;
 import org.openqa.selenium.interactions.internal.MouseAction;
 
 import java.util.ArrayList;
@@ -41,6 +40,7 @@ public class ClickAndHoldAction extends MouseAction implements Action {
    * (i.e. twice in a row, without releasing the button after the first action) the results will be
    * different between browsers.
    */
+  @Override
   public void perform() {
     moveToLocation();
     mouse.mouseDown(getActionLocation());

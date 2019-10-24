@@ -17,15 +17,13 @@
 
 package org.openqa.selenium;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.openqa.selenium.testing.Driver.ALL;
-import static org.openqa.selenium.testing.Driver.CHROME;
-import static org.openqa.selenium.testing.Driver.IE;
-import static org.openqa.selenium.testing.Driver.SAFARI;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.openqa.selenium.testing.drivers.Browser.ALL;
+import static org.openqa.selenium.testing.drivers.Browser.CHROME;
+import static org.openqa.selenium.testing.drivers.Browser.CHROMIUMEDGE;;
+import static org.openqa.selenium.testing.drivers.Browser.EDGE;
+import static org.openqa.selenium.testing.drivers.Browser.IE;
+import static org.openqa.selenium.testing.drivers.Browser.SAFARI;
 
 import org.junit.Test;
 import org.openqa.selenium.testing.Ignore;
@@ -37,26 +35,26 @@ public class MiscTest extends JUnit4TestBase {
   @Test
   public void testShouldReturnTitleOfPageIfSet() {
     driver.get(pages.xhtmlTestPage);
-    assertThat(driver.getTitle(), equalTo(("XHTML Test Page")));
+    assertThat(driver.getTitle()).isEqualTo(("XHTML Test Page"));
 
     driver.get(pages.simpleTestPage);
-    assertThat(driver.getTitle(), equalTo("Hello WebDriver"));
+    assertThat(driver.getTitle()).isEqualTo("Hello WebDriver");
   }
 
   @Test
   public void testShouldReportTheCurrentUrlCorrectly() {
     driver.get(pages.simpleTestPage);
-    assertTrue(pages.simpleTestPage.equalsIgnoreCase(driver.getCurrentUrl()));
+    assertThat(driver.getCurrentUrl()).isEqualToIgnoringCase(pages.simpleTestPage);
 
     driver.get(pages.javascriptPage);
-    assertTrue(pages.javascriptPage.equalsIgnoreCase(driver.getCurrentUrl()));
+    assertThat(driver.getCurrentUrl()).isEqualToIgnoringCase(pages.javascriptPage);
   }
 
   @Test
   public void shouldReturnTagName() {
     driver.get(pages.formPage);
     WebElement selectBox = driver.findElement(By.id("cheese"));
-    assertThat(selectBox.getTagName().toLowerCase(), is("input"));
+    assertThat(selectBox.getTagName()).isEqualToIgnoringCase("input");
   }
 
   @Test
@@ -65,22 +63,20 @@ public class MiscTest extends JUnit4TestBase {
 
     String source = driver.getPageSource().toLowerCase();
 
-    assertThat(source.contains("<html"), is(true));
-    assertThat(source.contains("</html"), is(true));
-    assertThat(source.contains("an inline element"), is(true));
-    assertThat(source.contains("<p id="), is(true));
-    assertThat(source.contains("lotsofspaces"), is(true));
-    assertThat(source.contains("with document.write and with document.write again"), is(true));
+    assertThat(source).contains("<html", "</html", "an inline element", "<p id=", "lotsofspaces",
+                                "with document.write and with document.write again");
   }
 
   @Test
   @Ignore(value = CHROME, reason = "returns XML content formatted for display as HTML document")
+  @Ignore(value = CHROMIUMEDGE, reason = "returns XML content formatted for display as HTML document")
   @NotYetImplemented(value = SAFARI, reason = "returns XML content formatted for display as HTML document")
   @Ignore(IE)
+  @NotYetImplemented(EDGE)
   public void testShouldBeAbleToGetTheSourceOfAnXmlDocument() {
     driver.get(pages.simpleXmlDocument);
     String source = driver.getPageSource().toLowerCase();
-    assertThat(source.replaceAll("\\s", ""), equalTo("<xml><foo><bar>baz</bar></foo></xml>"));
+    assertThat(source).isEqualToIgnoringWhitespace("<xml><foo><bar>baz</bar></foo></xml>");
   }
 
 
@@ -101,11 +97,11 @@ public class MiscTest extends JUnit4TestBase {
     driver.get(appServer.whereIs("globalscope.html"));
     String[] vars = new String[]{"w", "h"};
     for (String var : vars) {
-      assertEquals(var, getGlobalVar(driver, var));
+      assertThat(getGlobalVar(driver, var)).isEqualTo(var);
     }
     driver.findElement(By.id("toclick")).click();
     for (String var : vars) {
-      assertEquals(var, getGlobalVar(driver, var));
+      assertThat(getGlobalVar(driver, var)).isEqualTo(var);
     }
   }
 

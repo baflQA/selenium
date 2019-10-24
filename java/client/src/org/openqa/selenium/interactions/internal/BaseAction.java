@@ -18,12 +18,14 @@
 package org.openqa.selenium.interactions.internal;
 
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Locatable;
 
 import java.util.Optional;
 
 /**
  * Base class for all actions.
  */
+@Deprecated
 public abstract class BaseAction {
   protected final Locatable where;
 

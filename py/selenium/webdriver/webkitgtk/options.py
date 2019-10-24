@@ -16,20 +16,21 @@
 # under the License.
 
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.options import ArgOptions
 
 
-class Options(object):
+class Options(ArgOptions):
     KEY = 'webkitgtk:browserOptions'
 
     def __init__(self):
+        super(Options, self).__init__()
         self._binary_location = ''
-        self._arguments = []
         self._overlay_scrollbars_enabled = True
 
     @property
     def binary_location(self):
         """
-        Returns the location of the browser binary otherwise an empty string
+        :Returns: The location of the browser binary otherwise an empty string
         """
         return self._binary_location
 
@@ -44,28 +45,9 @@ class Options(object):
         self._binary_location = value
 
     @property
-    def arguments(self):
-        """
-        Returns a list of arguments needed for the browser
-        """
-        return self._arguments
-
-    def add_argument(self, argument):
-        """
-        Adds an argument to the list
-
-        :Args:
-         - Sets the arguments
-        """
-        if argument:
-            self._arguments.append(argument)
-        else:
-            raise ValueError("argument can not be null")
-
-    @property
     def overlay_scrollbars_enabled(self):
         """
-        Returns whether overlay scrollbars should be enabled
+        :Returns: Whether overlay scrollbars should be enabled
         """
         return self._overlay_scrollbars_enabled
 
@@ -84,7 +66,7 @@ class Options(object):
         Creates a capabilities with all the options that have been set and
         returns a dictionary with everything
         """
-        caps = DesiredCapabilities.WEBKITGTK.copy()
+        caps = self._caps
 
         browser_options = {}
         if self.binary_location:
@@ -96,3 +78,7 @@ class Options(object):
         caps[Options.KEY] = browser_options
 
         return caps
+
+    @property
+    def default_capabilities(self):
+        return DesiredCapabilities.WEBKITGTK.copy()

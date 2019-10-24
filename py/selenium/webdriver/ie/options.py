@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.options import ArgOptions
 
 
 class ElementScrollBehavior(object):
@@ -22,7 +23,7 @@ class ElementScrollBehavior(object):
     BOTTOM = 1
 
 
-class Options(object):
+class Options(ArgOptions):
 
     KEY = 'se:ieOptions'
     SWITCHES = 'ie.browserCommandLineSwitches'
@@ -44,29 +45,20 @@ class Options(object):
     VALIDATE_COOKIE_DOCUMENT_TYPE = 'ie.validateCookieDocumentType'
 
     def __init__(self):
-        self._arguments = []
+        super(Options, self).__init__()
         self._options = {}
         self._additional = {}
 
     @property
-    def arguments(self):
-        """ Returns a list of browser process arguments """
-        return self._arguments
-
-    def add_argument(self, argument):
-        """ Add argument to be used for the browser process """
-        if argument is None:
-            raise ValueError()
-        self._arguments.append(argument)
-
-    @property
     def options(self):
-        """ Returns a dictionary of browser options """
+        """:Returns: A dictionary of browser options """
         return self._options
 
     @property
     def browser_attach_timeout(self):
-        """ Returns the options Browser Attach Timeout in milliseconds """
+        """
+        :Returns: The options Browser Attach Timeout in milliseconds
+        """
         return self._options.get(self.BROWSER_ATTACH_TIMEOUT)
 
     @browser_attach_timeout.setter
@@ -84,7 +76,7 @@ class Options(object):
 
     @property
     def element_scroll_behavior(self):
-        """ Returns the options Element Scroll Behavior in milliseconds """
+        """:Returns: The options Element Scroll Behavior in milliseconds """
         return self._options.get(self.ELEMENT_SCROLL_BEHAVIOR)
 
     @element_scroll_behavior.setter
@@ -102,7 +94,7 @@ class Options(object):
 
     @property
     def ensure_clean_session(self):
-        """ Returns the options Ensure Clean Session value """
+        """:Returns: The options Ensure Clean Session value """
         return self._options.get(self.ENSURE_CLEAN_SESSION)
 
     @ensure_clean_session.setter
@@ -118,7 +110,7 @@ class Options(object):
 
     @property
     def file_upload_dialog_timeout(self):
-        """ Returns the options File Upload Dialog Timeout in milliseconds """
+        """:Returns: The options File Upload Dialog Timeout in milliseconds """
         return self._options.get(self.FILE_UPLOAD_DIALOG_TIMEOUT)
 
     @file_upload_dialog_timeout.setter
@@ -136,7 +128,7 @@ class Options(object):
 
     @property
     def force_create_process_api(self):
-        """ Returns the options Force Create Process Api value """
+        """:Returns: The options Force Create Process Api value """
         return self._options.get(self.FORCE_CREATE_PROCESS_API)
 
     @force_create_process_api.setter
@@ -152,7 +144,7 @@ class Options(object):
 
     @property
     def force_shell_windows_api(self):
-        """ Returns the options Force Shell Windows Api value """
+        """:Returns: The options Force Shell Windows Api value """
         return self._options.get(self.FORCE_SHELL_WINDOWS_API)
 
     @force_shell_windows_api.setter
@@ -168,7 +160,7 @@ class Options(object):
 
     @property
     def full_page_screenshot(self):
-        """ Returns the options Full Page Screenshot value """
+        """:Returns: The options Full Page Screenshot value """
         return self._options.get(self.FULL_PAGE_SCREENSHOT)
 
     @full_page_screenshot.setter
@@ -184,7 +176,7 @@ class Options(object):
 
     @property
     def ignore_protected_mode_settings(self):
-        """ Returns the options Ignore Protected Mode Settings value """
+        """:Returns: The options Ignore Protected Mode Settings value """
         return self._options.get(self.IGNORE_PROTECTED_MODE_SETTINGS)
 
     @ignore_protected_mode_settings.setter
@@ -200,7 +192,7 @@ class Options(object):
 
     @property
     def ignore_zoom_level(self):
-        """ Returns the options Ignore Zoom Level value """
+        """:Returns: The options Ignore Zoom Level value """
         return self._options.get(self.IGNORE_ZOOM_LEVEL)
 
     @ignore_zoom_level.setter
@@ -216,7 +208,7 @@ class Options(object):
 
     @property
     def initial_browser_url(self):
-        """ Returns the options Initial Browser Url value """
+        """:Returns: The options Initial Browser Url value """
         return self._options.get(self.INITIAL_BROWSER_URL)
 
     @initial_browser_url.setter
@@ -232,7 +224,7 @@ class Options(object):
 
     @property
     def native_events(self):
-        """ Returns the options Native Events value """
+        """:Returns: The options Native Events value """
         return self._options.get(self.NATIVE_EVENTS)
 
     @native_events.setter
@@ -248,7 +240,7 @@ class Options(object):
 
     @property
     def persistent_hover(self):
-        """ Returns the options Persistent Hover value """
+        """:Returns: The options Persistent Hover value """
         return self._options.get(self.PERSISTENT_HOVER)
 
     @persistent_hover.setter
@@ -264,7 +256,7 @@ class Options(object):
 
     @property
     def require_window_focus(self):
-        """ Returns the options Require Window Focus value """
+        """:Returns: The options Require Window Focus value """
         return self._options.get(self.REQUIRE_WINDOW_FOCUS)
 
     @require_window_focus.setter
@@ -280,7 +272,7 @@ class Options(object):
 
     @property
     def use_per_process_proxy(self):
-        """ Returns the options User Per Process Proxy value """
+        """:Returns: The options User Per Process Proxy value """
         return self._options.get(self.USE_PER_PROCESS_PROXY)
 
     @use_per_process_proxy.setter
@@ -296,7 +288,7 @@ class Options(object):
 
     @property
     def validate_cookie_document_type(self):
-        """ Returns the options Validate Cookie Document Type value """
+        """:Returns: The options Validate Cookie Document Type value """
         return self._options.get(self.VALIDATE_COOKIE_DOCUMENT_TYPE)
 
     @validate_cookie_document_type.setter
@@ -312,7 +304,7 @@ class Options(object):
 
     @property
     def additional_options(self):
-        """ Returns the additional options """
+        """:Returns: The additional options """
         return self._additional
 
     def add_additional_option(self, name, value):
@@ -327,8 +319,8 @@ class Options(object):
         self._additional[name] = value
 
     def to_capabilities(self):
-        """ Marshals the IE options to a the correct object """
-        caps = DesiredCapabilities.INTERNETEXPLORER.copy()
+        """Marshals the IE options to the correct object."""
+        caps = self._caps
 
         opts = self._options.copy()
         if len(self._arguments) > 0:
@@ -340,3 +332,7 @@ class Options(object):
         if len(opts) > 0:
             caps[Options.KEY] = opts
         return caps
+
+    @property
+    def default_capabilities(self):
+        return DesiredCapabilities.INTERNETEXPLORER.copy()

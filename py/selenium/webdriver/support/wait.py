@@ -38,7 +38,7 @@ class WebDriverWait(object):
            Example:
             from selenium.webdriver.support.ui import WebDriverWait \n
             element = WebDriverWait(driver, 10).until(lambda x: x.find_element_by_id("someId")) \n
-            is_disappeared = WebDriverWait(driver, 30, 1, (ElementNotVisibleException)).\ \n
+            is_disappeared = WebDriverWait(driver, 30, 1, (ElementNotVisibleException)).\\ \n
                         until_not(lambda x: x.find_element_by_id("someId").is_displayed())
         """
         self._driver = driver
@@ -61,7 +61,13 @@ class WebDriverWait(object):
 
     def until(self, method, message=''):
         """Calls the method provided with the driver as an argument until the \
-        return value is not False."""
+        return value does not evaluate to ``False``.
+
+        :param method: callable(WebDriver)
+        :param message: optional message for :exc:`TimeoutException`
+        :returns: the result of the last call to `method`
+        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs
+        """
         screen = None
         stacktrace = None
 
@@ -81,7 +87,14 @@ class WebDriverWait(object):
 
     def until_not(self, method, message=''):
         """Calls the method provided with the driver as an argument until the \
-        return value is False."""
+        return value evaluates to ``False``.
+
+        :param method: callable(WebDriver)
+        :param message: optional message for :exc:`TimeoutException`
+        :returns: the result of the last call to `method`, or
+                  ``True`` if `method` has raised one of the ignored exceptions
+        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs
+        """
         end_time = time.time() + self._timeout
         while True:
             try:

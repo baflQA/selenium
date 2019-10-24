@@ -71,20 +71,6 @@ class Condition {
   description() {
     return this.description_;
   }
-
-  /**
-   * Allows for lenient instanceof checks
-   * @param {!(IThenable<T>|
-   *           Condition<T>|
-   *           function(!WebDriver): T)} condition - the condition instance
-   * @return {boolean}
-   */
-  static [Symbol.hasInstance](condition) {
-    return !!condition
-      && typeof condition === 'object'
-      && typeof condition.description === 'function'
-      && typeof condition.fn === 'function';
-  }
 }
 
 
@@ -446,8 +432,11 @@ class IWebDriver {
    *           function(!WebDriver): T)} condition The condition to
    *     wait on, defined as a promise, condition object, or  a function to
    *     evaluate as a condition.
-   * @param {number=} timeout How long to wait for the condition to be true.
+   * @param {number=} timeout The duration in milliseconds, how long to wait
+   *     for the condition to be true.
    * @param {string=} message An optional message to use if the wait times out.
+   * @param {number=} pollTimeout The duration in milliseconds, how long to
+   *     wait between polling the condition.
    * @return {!(IThenable<T>|WebElementPromise)} A promise that will be
    *     resolved with the first truthy value returned by the condition
    *     function, or rejected if the condition times out. If the input
@@ -456,7 +445,7 @@ class IWebDriver {
    * @throws {TypeError} if the provided `condition` is not a valid type.
    * @template T
    */
-  wait(condition, timeout = undefined, message = undefined) {}
+  wait(condition, timeout = undefined, message = undefined, pollTimeout = undefined) {}
 
   /**
    * Makes the driver sleep for the given amount of time.
@@ -778,9 +767,13 @@ class WebDriver {
   }
 
   /** @override */
-  wait(condition, timeout = 0, message = undefined) {
+  wait(condition, timeout = 0, message = undefined, pollTimeout = 200) {
     if (typeof timeout !== 'number' || timeout < 0) {
       throw TypeError('timeout must be a number >= 0: ' + timeout);
+    }
+
+    if (typeof pollTimeout !== 'number' || pollTimeout < 0) {
+      throw TypeError('pollTimeout must be a number >= 0: ' + pollTimeout);
     }
 
     if (promise.isPromise(condition)) {
@@ -849,7 +842,7 @@ class WebDriver {
                   (message ? `${message}\n` : '')
                         + `Wait timed out after ${elapsed}ms`));
           } else {
-            setTimeout(pollCondition, 0);
+            setTimeout(pollCondition, pollTimeout);
           }
         }, reject);
       };
@@ -1706,6 +1699,27 @@ class TargetLocator {
   }
 
   /**
+   * Creates a new browser window and switches the focus for future
+   * commands of this driver to the new window.
+   *
+   * @param {string} typeHint 'window' or 'tab'. The created window is not
+   *     guaranteed to be of the requested type; if the driver does not support
+   *     the requested type, a new browser window will be created of whatever type
+   *     the driver does support.
+   * @return {!Promise<void>} A promise that will be resolved
+   *     when the driver has changed focus to the new window.
+   */
+  newWindow(typeHint) {
+    var driver = this.driver_
+    return this.driver_.execute(
+        new command.Command(command.Name.SWITCH_TO_NEW_WINDOW).
+            setParameter('type', typeHint)
+        ).then(function(response) {
+          return driver.switchTo().window(response.handle);
+        });
+  }
+
+  /**
    * Changes focus to the active modal dialog, such as those opened by
    * `window.alert()`, `window.confirm()`, and `window.prompt()`. The returned
    * promise will be rejected with a
@@ -1810,7 +1824,8 @@ class WebElement {
     if (a === b) {
       return true;
     }
-    return a.driver_.executeScript('arguments[0] === arguments[1]', a, b);
+    return a.driver_.executeScript(
+      'return arguments[0] === arguments[1]', a, b);
   }
 
   /** @return {!WebDriver} The parent driver for this instance. */

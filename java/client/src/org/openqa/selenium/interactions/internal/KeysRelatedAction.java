@@ -21,6 +21,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Interaction;
 import org.openqa.selenium.interactions.IsInteraction;
 import org.openqa.selenium.interactions.Keyboard;
+import org.openqa.selenium.interactions.Locatable;
 import org.openqa.selenium.interactions.Mouse;
 import org.openqa.selenium.interactions.PointerInput;
 import org.openqa.selenium.interactions.PointerInput.MouseButton;
@@ -36,6 +37,7 @@ import java.util.Optional;
 /**
  * Represents a general action related to keyboard input.
  */
+@Deprecated
 public abstract class KeysRelatedAction extends BaseAction implements IsInteraction {
   protected final Keyboard keyboard;
   protected final Mouse mouse;

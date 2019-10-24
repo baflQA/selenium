@@ -18,37 +18,32 @@
 package org.openqa.selenium.remote;
 
 import static java.net.HttpURLConnection.HTTP_OK;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasKey;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static java.util.Collections.EMPTY_MAP;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.openqa.selenium.Proxy.ProxyType.AUTODETECT;
+import static org.openqa.selenium.remote.http.Contents.string;
+import static org.openqa.selenium.remote.http.Contents.utf8String;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.junit.Test;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.ImmutableCapabilities;
 import org.openqa.selenium.Proxy;
+import org.openqa.selenium.json.Json;
 import org.openqa.selenium.remote.http.HttpClient;
 import org.openqa.selenium.remote.http.HttpRequest;
 import org.openqa.selenium.remote.http.HttpResponse;
+import org.openqa.selenium.remote.http.WebSocket;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -57,31 +52,31 @@ public class ProtocolHandshakeTest {
 
   @Test
   public void requestShouldIncludeJsonWireProtocolCapabilities() throws IOException {
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", new ImmutableCapabilities());
+    Map<String, Object> params = singletonMap("desiredCapabilities", new ImmutableCapabilities());
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"value\": {\"sessionId\": \"23456789\", \"capabilities\": {}}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"value\": {\"sessionId\": \"23456789\", \"capabilities\": {}}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     new ProtocolHandshake().createSession(client, command);
 
     Map<String, Object> json = getRequestPayloadAsMap(client);
 
-    assertEquals(ImmutableMap.of(), json.get("desiredCapabilities"));
+    assertThat(json.get("desiredCapabilities")).isEqualTo(EMPTY_MAP);
   }
 
   @Test
   public void requestShouldIncludeSpecCompliantW3CCapabilities() throws IOException {
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", new ImmutableCapabilities());
+    Map<String, Object> params = singletonMap("desiredCapabilities", new ImmutableCapabilities());
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"value\": {\"sessionId\": \"23456789\", \"capabilities\": {}}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"value\": {\"sessionId\": \"23456789\", \"capabilities\": {}}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     new ProtocolHandshake().createSession(client, command);
@@ -90,37 +85,37 @@ public class ProtocolHandshakeTest {
 
     List<Map<String, Object>> caps = mergeW3C(json);
 
-    assertFalse(caps.isEmpty());
+    assertThat(caps).isNotEmpty();
   }
 
   @Test
   public void shouldParseW3CNewSessionResponse() throws IOException {
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", new ImmutableCapabilities());
+    Map<String, Object> params = singletonMap("desiredCapabilities", new ImmutableCapabilities());
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"value\": {\"sessionId\": \"23456789\", \"capabilities\": {}}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"value\": {\"sessionId\": \"23456789\", \"capabilities\": {}}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     ProtocolHandshake.Result result = new ProtocolHandshake().createSession(client, command);
-    assertEquals(result.getDialect(), Dialect.W3C);
+    assertThat(result.getDialect()).isEqualTo(Dialect.W3C);
   }
 
   @Test
   public void shouldParseWireProtocolNewSessionResponse() throws IOException {
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", new ImmutableCapabilities());
+    Map<String, Object> params = singletonMap("desiredCapabilities", new ImmutableCapabilities());
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     ProtocolHandshake.Result result = new ProtocolHandshake().createSession(client, command);
-    assertEquals(result.getDialect(), Dialect.OSS);
+    assertThat(result.getDialect()).isEqualTo(Dialect.OSS);
   }
 
   @Test
@@ -130,13 +125,13 @@ public class ProtocolHandshakeTest {
         "option", "I like sausages",
         "browserName", "amazing cake browser");
 
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", caps);
+    Map<String, Object> params = singletonMap("desiredCapabilities", caps);
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     new ProtocolHandshake().createSession(client, command);
@@ -144,38 +139,36 @@ public class ProtocolHandshakeTest {
     Map<String, Object> handshakeRequest = getRequestPayloadAsMap(client);
 
     Object rawCaps = handshakeRequest.get("capabilities");
-    assertTrue(rawCaps instanceof Map);
+    assertThat(rawCaps).isInstanceOf(Map.class);
 
     Map<?, ?> capabilities = (Map<?, ?>) rawCaps;
 
-    assertNull(capabilities.get("alwaysMatch"));
+    assertThat(capabilities.get("alwaysMatch")).isNull();
     List<Map<?, ?>> first = (List<Map<?, ?>>) capabilities.get("firstMatch");
 
     // We don't care where they are, but we want to see "se:option" and not "option"
-    Set<String> keys = new HashSet<>();
-    keys.addAll(first.stream()
-                    .map(Map::keySet)
-                    .flatMap(Collection::stream)
-                    .map(String::valueOf)
-                    .collect(Collectors.toSet()));
-    assertTrue(keys.contains("browserName"));
-    assertTrue(keys.contains("se:option"));
-    assertFalse(keys.contains("options"));
+    Set<String> keys = first.stream()
+        .map(Map::keySet)
+        .flatMap(Collection::stream)
+        .map(String::valueOf).collect(Collectors.toSet());
+    assertThat(keys)
+        .contains("browserName", "se:option")
+        .doesNotContain("options");
   }
 
   @Test
   public void firstMatchSeparatesCapsForDifferentBrowsers() throws IOException {
     Capabilities caps = new ImmutableCapabilities(
-        "moz:firefoxOptions", ImmutableMap.of(),
+        "moz:firefoxOptions", EMPTY_MAP,
         "browserName", "chrome");
 
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", caps);
+    Map<String, Object> params = singletonMap("desiredCapabilities", caps);
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     new ProtocolHandshake().createSession(client, command);
@@ -184,25 +177,25 @@ public class ProtocolHandshakeTest {
 
     List<Map<String, Object>> capabilities = mergeW3C(handshakeRequest);
 
-    assertThat(capabilities, containsInAnyOrder(
-        ImmutableMap.of("moz:firefoxOptions", ImmutableMap.of()),
-        ImmutableMap.of("browserName", "chrome")));
+    assertThat(capabilities).contains(
+        singletonMap("moz:firefoxOptions", EMPTY_MAP),
+        singletonMap("browserName", "chrome"));
   }
 
   @Test
   public void doesNotCreateFirstMatchForNonW3CCaps() throws IOException {
     Capabilities caps = new ImmutableCapabilities(
-        "cheese", ImmutableMap.of(),
-        "moz:firefoxOptions", ImmutableMap.of(),
+        "cheese", EMPTY_MAP,
+        "moz:firefoxOptions", EMPTY_MAP,
         "browserName", "firefox");
 
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", caps);
+    Map<String, Object> params = singletonMap("desiredCapabilities", caps);
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     new ProtocolHandshake().createSession(client, command);
@@ -211,13 +204,14 @@ public class ProtocolHandshakeTest {
 
     List<Map<String, Object>> w3c = mergeW3C(handshakeRequest);
 
-    assertEquals(1, w3c.size());
+    assertThat(w3c).hasSize(1);
     // firstMatch should not contain an object for Chrome-specific capabilities. Because
     // "chromeOptions" is not a W3C capability name, it is stripped from any firstMatch objects.
     // The resulting empty object should be omitted from firstMatch; if it is present, then the
     // Firefox-specific capabilities might be ignored.
-    assertThat(w3c, contains(
-        allOf(hasKey("moz:firefoxOptions"), hasEntry("browserName", "firefox"))));
+    assertThat(w3c.get(0))
+        .containsKey("moz:firefoxOptions")
+        .containsEntry("browserName", "firefox");
   }
 
   @Test
@@ -225,13 +219,13 @@ public class ProtocolHandshakeTest {
     Proxy proxy = new Proxy();
     proxy.setProxyType(AUTODETECT);
     Capabilities caps = new ImmutableCapabilities(CapabilityType.PROXY, proxy);
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", caps);
+    Map<String, Object> params = singletonMap("desiredCapabilities", caps);
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     new ProtocolHandshake().createSession(client, command);
@@ -240,12 +234,12 @@ public class ProtocolHandshakeTest {
 
     mergeW3C(handshakeRequest).forEach(always -> {
           Map<String, ?> seenProxy = (Map<String, ?>) always.get("proxy");
-          assertEquals("autodetect", seenProxy.get("proxyType"));
+      assertThat(seenProxy.get("proxyType")).isEqualTo("autodetect");
         });
 
     Map<String, ?> jsonCaps = (Map<String, ?>) handshakeRequest.get("desiredCapabilities");
     Map<String, ?> seenProxy = (Map<String, ?>) jsonCaps.get("proxy");
-    assertEquals("AUTODETECT", seenProxy.get("proxyType"));
+    assertThat(seenProxy.get("proxyType")).isEqualTo("AUTODETECT");
   }
 
   @Test
@@ -255,13 +249,13 @@ public class ProtocolHandshakeTest {
         "platformName", "ANY",
         "browserName", "cake");
 
-    Map<String, Object> params = ImmutableMap.of("desiredCapabilities", caps);
+    Map<String, Object> params = singletonMap("desiredCapabilities", caps);
     Command command = new Command(null, DriverCommand.NEW_SESSION, params);
 
     HttpResponse response = new HttpResponse();
     response.setStatus(HTTP_OK);
-    response.setContent(
-        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}".getBytes(UTF_8));
+    response.setContent(utf8String(
+        "{\"sessionId\": \"23456789\", \"status\": 0, \"value\": {}}"));
     RecordingHttpClient client = new RecordingHttpClient(response);
 
     new ProtocolHandshake().createSession(client, command);
@@ -270,9 +264,9 @@ public class ProtocolHandshakeTest {
 
     mergeW3C(handshakeRequest)
         .forEach(capabilities -> {
-          assertEquals("cake", capabilities.get("browserName"));
-          assertNull(capabilities.toString(), capabilities.get("platformName"));
-          assertNull(capabilities.toString(), capabilities.get("platform"));
+          assertThat(capabilities.get("browserName")).isEqualTo("cake");
+          assertThat(capabilities.get("platformName")).isNull();
+          assertThat(capabilities.get("platform")).isNull();
         });
   }
 
@@ -282,26 +276,23 @@ public class ProtocolHandshakeTest {
       return null;
     }
 
-    Map<String, Object> alwaysMatch = (Map<String, Object>) capabilities.get("alwaysMatch");
-    Map<String, Object> always = alwaysMatch == null ? ImmutableMap.of() : alwaysMatch;
+    Map<String, Object> always = Optional.ofNullable(
+        (Map <String, Object>) capabilities.get("alwaysMatch")).orElse(EMPTY_MAP);
 
-    Collection<Map<String, Object>> firsts =
-        (Collection<Map<String, Object>>) capabilities.get("firstMatch");
-    if (firsts == null) {
-      firsts = ImmutableList.of(ImmutableMap.of());
-    }
+    Collection<Map<String, Object>> firsts = Optional.ofNullable(
+        (Collection<Map<String, Object>>) capabilities.get("firstMatch")).orElse(singletonList(EMPTY_MAP));
+
     List<Map<String, Object>> allCaps = firsts.stream()
         .map(first -> ImmutableMap.<String, Object>builder().putAll(always).putAll(first).build())
-        .collect(Collectors.toList());
+        .collect(toList());
 
-    assertFalse("Unable to construct valid capabilities", allCaps.isEmpty());
+    assertThat(allCaps).isNotEmpty();
 
     return allCaps;
   }
 
   private Map<String, Object> getRequestPayloadAsMap(RecordingHttpClient client) {
-    return new Gson().fromJson(
-        client.getRequestPayload(), new TypeToken<Map<String, Object>>(){}.getType());
+    return new Json().toType(client.getRequestPayload(), Map.class);
   }
 
   class RecordingHttpClient implements HttpClient {
@@ -315,12 +306,17 @@ public class ProtocolHandshakeTest {
 
     @Override
     public HttpResponse execute(HttpRequest request) {
-      payload = request.getContentString();
+      payload = string(request);
       return response;
     }
 
     String getRequestPayload() {
       return payload;
+    }
+
+    @Override
+    public WebSocket openSocket(HttpRequest request, WebSocket.Listener listener) {
+      throw new UnsupportedOperationException("openSocket");
     }
   }
 }

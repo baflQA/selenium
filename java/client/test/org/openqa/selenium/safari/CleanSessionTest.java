@@ -17,9 +17,8 @@
 
 package org.openqa.selenium.safari;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.openqa.selenium.testing.Driver.SAFARI;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.openqa.selenium.testing.drivers.Browser.SAFARI;
 
 import org.junit.After;
 import org.junit.Test;
@@ -96,7 +95,7 @@ public class CleanSessionTest extends JUnit4TestBase {
         "window.constructor.prototype.setTimeout.call(window, function() {" +
             "callback(123);\n}, 0);");
 
-    assertEquals(123L, result);
+    assertThat(result).isEqualTo(123L);
   }
 
   @Test
@@ -109,23 +108,23 @@ public class CleanSessionTest extends JUnit4TestBase {
     long numMessages = (Long) executor.executeScript(
         "return window.messages.length;");
 
-    assertEquals(1L, numMessages);
+    assertThat(numMessages).isEqualTo(1L);
   }
 
   @Test
   public void doesNotCreateExtraIframeOnPageUnderTest() {
     driver.get(appServer.whereIs("messages.html"));
-    assertEquals(0, driver.findElements(By.tagName("iframe")).size());
+    assertThat(driver.findElements(By.tagName("iframe"))).hasSize(0);
 
     ((JavascriptExecutor) driver).executeScript("return location.href;");
-    assertEquals(0, driver.findElements(By.tagName("iframe")).size());
+    assertThat(driver.findElements(By.tagName("iframe"))).hasSize(0);
   }
 
   private void assertHasCookie(Cookie cookie) {
-    assertTrue(driver2.manage().getCookies().contains(cookie));
+    assertThat(driver2.manage().getCookies()).contains(cookie);
   }
 
   private void assertNoCookies() {
-    assertTrue(driver2.manage().getCookies().isEmpty());
+    assertThat(driver2.manage().getCookies()).isEmpty();
   }
 }

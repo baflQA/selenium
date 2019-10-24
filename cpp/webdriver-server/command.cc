@@ -66,11 +66,13 @@ void Command::Deserialize(const std::string& json) {
       }
     }
 
+    this->is_valid_parameters_ = true;
     Json::Value command_parameter_object = root["parameters"];
     if (!command_parameter_object.isObject()) {
       LOG(WARN) << "The value of the 'parameters' attribute is not a JSON "
                 << "object. This is invalid for the WebDriver JSON Wire "
                 << "Protocol.";
+      this->is_valid_parameters_ = false;
     } else {
       it = command_parameter_object.begin();
       end = command_parameter_object.end();
@@ -104,6 +106,20 @@ std::string Command::Serialize() {
   Json::StreamWriterBuilder writer;
   std::string output(Json::writeString(writer, json_object));
   return output;
+}
+
+void Command::Copy(const Command& source) {
+  this->command_type_ = source.command_type_;
+  this->command_parameters_ = source.command_parameters_;
+  this->is_valid_parameters_ = source.is_valid_parameters_;
+  this->session_id_ = source.session_id_;
+}
+
+void Command::Reset() {
+  this->command_type_ = CommandType::NoCommand;
+  this->session_id_ = "";
+  this->command_parameters_.clear();
+  this->is_valid_parameters_ = false;
 }
 
 }  // namespace webdriver

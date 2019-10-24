@@ -1,0 +1,22 @@
+load("//java:defs.bzl", "java_export")
+load("//java:version.bzl", "SE_VERSION")
+
+java_export(
+    name = "chromium",
+    srcs = glob(["*.java"]),
+    maven_coordinates = "org.seleniumhq.selenium:selenium-chromium-driver:%s" % SE_VERSION,
+    pom_template = "//java/client/src/org/openqa/selenium:template-pom",
+    visibility = [
+        "//visibility:public",
+    ],
+    exports = [
+        "//java/client/src/org/openqa/selenium/devtools",
+    ],
+    deps = [
+        "//java/client/src/org/openqa/selenium/devtools",
+        "//java/client/src/org/openqa/selenium/json",
+        "//java/client/src/org/openqa/selenium/remote",
+        "//third_party/java/guava",
+        "//third_party/java/service",
+    ],
+)

@@ -19,7 +19,6 @@ package org.openqa.selenium.interactions;
 
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.internal.KeysRelatedAction;
-import org.openqa.selenium.interactions.internal.Locatable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +50,7 @@ public class SendKeysAction extends KeysRelatedAction implements Action {
     this(keyboard, mouse, null, keysToSend);
   }
 
+  @Override
   public void perform() {
     focusOnElement();
 

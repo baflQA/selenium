@@ -18,7 +18,6 @@
 package org.openqa.selenium.interactions;
 
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.internal.Locatable;
 import org.openqa.selenium.interactions.internal.MouseAction;
 
 import java.util.ArrayList;
@@ -39,6 +38,7 @@ public class DoubleClickAction extends MouseAction implements Action {
   /**
    * Double-clicks on the given element.
    */
+  @Override
   public void perform() {
     moveToLocation();
     mouse.doubleClick(getActionLocation());

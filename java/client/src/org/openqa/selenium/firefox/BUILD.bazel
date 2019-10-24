@@ -1,0 +1,24 @@
+load("//java:defs.bzl", "java_export")
+load("//java:version.bzl", "SE_VERSION")
+load("//:copy_file.bzl", "copy_file")
+
+java_export(
+    name = "firefox",
+    srcs = glob(["*.java"]),
+    resources = [":prefs"],
+    maven_coordinates = "org.seleniumhq.selenium:selenium-firefox-driver:%s" % SE_VERSION,
+    pom_template = "//java/client/src/org/openqa/selenium:template-pom",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//java/client/src/org/openqa/selenium/json",
+        "//java/client/src/org/openqa/selenium/remote",
+        "//third_party/java/guava",
+        "//third_party/java/service",
+    ],
+)
+
+copy_file(
+    name = "prefs",
+    src = "//third_party/js/selenium:webdriver_json",
+    out = "webdriver_prefs.json",
+)
