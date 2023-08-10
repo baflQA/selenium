@@ -17,18 +17,7 @@
 
 package org.openqa.selenium.remote;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.Mockito.mock;
-import static org.openqa.selenium.remote.DriverCommand.FIND_ELEMENT;
-
 import com.google.common.collect.ImmutableMap;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
@@ -39,6 +28,7 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.html5.WebStorage;
 import org.openqa.selenium.internal.Require;
@@ -46,6 +36,19 @@ import org.openqa.selenium.support.decorators.Decorated;
 import org.openqa.selenium.support.decorators.WebDriverDecorator;
 import org.openqa.selenium.support.events.EventFiringDecorator;
 import org.openqa.selenium.support.events.WebDriverListener;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.openqa.selenium.remote.DriverCommand.FIND_ELEMENT;
 
 @Tag("UnitTests")
 class AugmenterTest {
@@ -274,6 +277,16 @@ class AugmenterTest {
 
     assertThat(augmented).isNotSameAs(modifyTitleDecorate);
     assertThat(augmented).isInstanceOf(Decorated.class);
+  }
+
+  @Test
+  void canNotAugmentDriverWrapperTest() {
+    WebDriver driver = new ChromeDriver();
+    WrappedWebDriver webDriverWrapper = new WrappedWebDriver(driver);
+    webDriverWrapper.additionalFunctionality();
+    assertThatThrownBy(() -> new Augmenter().augment(webDriverWrapper))
+      .isInstanceOf(IllegalStateException.class)
+      .hasMessageContaining("Unable to create new proxy");
   }
 
   private static class ByMagic extends By {
